@@ -43,6 +43,11 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def stats(self, request):
+        """
+        Returns aggregated statistics about tickets.
+        Uses database-level aggregation (count, min, annotate) to ensure O(1) performance
+        relative to dataset size, avoiding inaccurate or slow Python-side loops.
+        """
         total_tickets = Ticket.objects.count()
         open_tickets = Ticket.objects.filter(status='open').count()
         

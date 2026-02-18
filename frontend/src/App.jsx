@@ -1,60 +1,40 @@
-import { useState, useEffect, useCallback } from 'react'
-import axios from 'axios'
+import { useState } from 'react'
 import TicketForm from './components/TicketForm'
+import TicketList from './components/TicketList'
+import StatsDashboard from './components/StatsDashboard'
 import './App.css'
 
 function App() {
-    const [tickets, setTickets] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
-    const fetchTickets = useCallback(() => {
-        setLoading(true);
-        axios.get(`${apiUrl}/api/tickets/`)
-            .then(response => {
-                setTickets(response.data)
-                setLoading(false)
-            })
-            .catch(err => {
-                console.error("Error fetching tickets:", err)
-                setError("Failed to load tickets")
-                setLoading(false)
-            })
-    }, [apiUrl]);
-
-    useEffect(() => {
-        fetchTickets()
-    }, [fetchTickets])
+    const handleTicketCreated = () => {
+        setRefreshTrigger(prev => prev + 1);
+    }
 
     return (
         <div className="container">
             <h1>Support Ticket System</h1>
 
-            <TicketForm onTicketCreated={fetchTickets} />
+            <TicketForm onTicketCreated={handleTicketCreated} />
 
-            {loading && <p>Loading tickets...</p>}
-            {error && <p className="error">{error}</p>}
+            <hr className="divider" />
 
-            {!loading && !error && (
-                <div className="ticket-list">
-                    {tickets.length === 0 ? (
-                        <p>No tickets found.</p>
-                    ) : (
-                        tickets.map(ticket => (
-                            <div key={ticket.id} className="ticket-card">
-                                <h3>{ticket.title}</h3>
-                                <p>{ticket.description}</p>
-                                <div className="meta">
-                                    <span className={`status ${ticket.status}`}>{ticket.status}</span>
-                                    <span className="date">{new Date(ticket.created_at).toLocaleDateString()}</span>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            )}
+            <StatsDashboard refreshTrigger={refreshTrigger} />
+
+            <TicketList refreshTrigger={refreshTrigger} />
+
+            <style>{`
+                .container {
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    padding: 2rem;
+                }
+                .divider {
+                    margin: 2rem 0;
+                    border: 0;
+                    border-top: 1px solid #444;
+                }
+            `}</style>
         </div>
     )
 }
